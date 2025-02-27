@@ -5,12 +5,19 @@
 @if(Session::has('success'))
 <div class="alert alert-success">{{Session::get('success')}}</div>
 @endif
-
-<button type="button" class="btn btn-success btn-sm mt-5" data-toggle="modal" data-target="#exampleModal">
+<div class="row mt-5">
+  <div class="col-lg-6">
+  <i class="fw-bolder fs-4" >Users List</i>
+  </div>
+  <div class="col-lg-6">
+  <button type="button" class="btn btn-success btn-sm float-end" data-toggle="modal" data-target="#exampleModal">
    create product
 </button>
+  </div>
+</div>
+
 <div class="container">
-  <h2 class="mb-4 text-center">Users List</h2>
+ 
   <div class="table-responsive">
       <table class="table table-hover table-bordered text-center">
           <thead class="table-info">

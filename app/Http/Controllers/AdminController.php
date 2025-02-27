@@ -62,8 +62,20 @@ class AdminController extends Controller
      */
     public function showorders()
     {
-        $orders = Order::paginate(3);
+        $orders = Order::withTrashed()->paginate(3);
         return view('admin.orders.show', compact('orders'));
+    }
+    public function restoreorders($id)
+    {
+        $orders = Order::withTrashed()->find($id);
+        $orders->restore();
+        return back();
+    }
+    public function headdelete($id)
+    {
+        $orders = Order::find($id);
+        $orders->forceDelete();
+        return back();
     }
     public function editproduct($id)
     {
@@ -121,16 +133,15 @@ class AdminController extends Controller
         $order->delete();
         return back();
     }
-     public function showusers()
-     {
-        $allusers=User::paginate(3);
-        return view('admin.users.show',compact('allusers'));
-     }
-     public function deleteusers($id)
-     {
-        $allusers=User::find($id);
+    public function showusers()
+    {
+        $allusers = User::paginate(3);
+        return view('admin.users.show', compact('allusers'));
+    }
+    public function deleteusers($id)
+    {
+        $allusers = User::find($id);
         $allusers->delete();
         return to_route('user.show');
-     }
-     
+    }
 }

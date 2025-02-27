@@ -7,6 +7,8 @@ use Stripe\Stripe;
 use Stripe\Checkout\Session;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\User;
+use App\Notifications\NewOrder;
 
 class PaymentController extends Controller
 {
@@ -69,7 +71,10 @@ class PaymentController extends Controller
 
         $user->cart()->delete();
 
-
+        $admin = User::role('admin')->first(); // Pehla admin user
+        if ($admin) {
+            $admin->notify(new NewOrder($order));
+        }
         return view('payment.success');
     }
 

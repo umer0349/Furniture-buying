@@ -29,7 +29,9 @@ Route::middleware(['role:admin'])->group(function () {
         Route::get('/product/delete/{id}', 'deleteproduct')->name('product.delete');
         Route::get('/order/show', 'showorders')->name('orders.show');
         Route::get('/order/detail/{id}', 'orderdetail')->name('orderdtail.show');
-        Route::get('/order/delete/{id}', 'deleteorder')->name('order.delete');
+        Route::get('/order/delete/soft/{id}', 'deleteorder')->name('order.delete');
+        Route::get('/order/restore/{id}', 'restoreorders')->name('order.restore');
+        Route::get('/order/delete/{id}', 'headdelete')->name('order.heard_deleted');
         Route::get('/user/show', 'showusers')->name('user.show');
         Route::get('/user/delete/{id}', 'deleteusers')->name('user.delete');
     });
@@ -51,3 +53,9 @@ Route::controller(UserController::class)->group(function () {
         Route::get('/payment/cancel', 'cancel')->name('payment.cancel');
     });
 });
+Route::get('/notification/markasread',function()
+{
+  auth()->user()->unreadNotifications->markAsRead();
+  return back();
+})->name('read.notify');
+

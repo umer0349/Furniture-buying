@@ -29,12 +29,14 @@
             </div>
         </div>
     </div>
-    
     <div class="col-md-4">
-        <div class="card text-white bg-secondary mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Revenue</h5>
-                <p class="card-text">$12,500</p>
+        <div class="card text-white bg-secondary mb-3 shadow-lg rounded-3">
+            <div class="card-body d-flex align-items-center">
+                <i class="fa fa-coins fa-2x me-3"></i> <!-- Icon with proper spacing -->
+                <div>
+                    <h5 class="card-title mb-1">Revenue</h5>
+                    <p class="card-text fs-4 fw-bold">${{$totalrevenue}}</p>
+                </div>
             </div>
         </div>
     </div>

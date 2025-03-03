@@ -16,7 +16,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
 
 //  ...............admincontroller  routes
 Route::middleware(['role:admin'])->group(function () {
@@ -38,7 +38,6 @@ Route::middleware(['role:admin'])->group(function () {
 });
 //  ...............usercontroller  routes
 
-
 Route::controller(UserController::class)->group(function () {
     Route::get('/', 'user')->name('userside')->middleware('restrict_admin');
     Route::middleware(['role:user'])->group(function () {
@@ -53,9 +52,8 @@ Route::controller(UserController::class)->group(function () {
         Route::get('/payment/cancel', 'cancel')->name('payment.cancel');
     });
 });
-Route::get('/notification/markasread',function()
-{
-  auth()->user()->unreadNotifications->markAsRead();
-  return back();
-})->name('read.notify');
+Route::get('/notification/markasread', function () {
+    auth()->user()->unreadNotifications->markAsRead();
 
+    return back();
+})->name('read.notify');

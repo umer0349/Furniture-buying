@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Stripe\Stripe;
-use Stripe\Checkout\Session;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
 use App\Notifications\NewOrder;
+use Illuminate\Http\Request;
+use Stripe\Checkout\Session;
+use Stripe\Stripe;
 
 class PaymentController extends Controller
 {
     public function checkout(Request $request)
-    { 
-        
+    {
+
         // Set Stripe API key
         Stripe::setApiKey(env('STRIPE_SECRET'));
 
@@ -34,7 +34,7 @@ class PaymentController extends Controller
                 ],
             ],
             'mode' => 'payment',
-             'success_url' => route('payment.success', ['subtotal' => $request->subtotal]),
+            'success_url' => route('payment.success', ['subtotal' => $request->subtotal]),
             'cancel_url' => route('payment.cancel'),
         ]);
 
@@ -44,7 +44,7 @@ class PaymentController extends Controller
 
     public function success(Request $request)
     {
-        
+
         // Retrieve the session ID from the request (you can use it to verify the payment)
         $sessionId = $request->get('session_id');
 
@@ -52,22 +52,22 @@ class PaymentController extends Controller
 
         // Store the order details
         $order = Order::create([
-            'order_number' => 'ORD-' . strtoupper(uniqid()), // Generate a unique order number
+            'order_number' => 'ORD-'.strtoupper(uniqid()), // Generate a unique order number
             'user_id' => auth()->id(), // Assuming the user is logged in
             'subtotal' => $request->subtotal, // Store the subtotal
             'status' => 'completed', // Update the status to 'completed' after a successful payment
         ]);
         $user = auth()->user();
-        $cartitems=$user->cart;
-          foreach( $cartitems as $item){
+        $cartitems = $user->cart;
+        foreach ($cartitems as $item) {
             OrderItem::create([
-             'order_id'=>$order->id,
-             'product_id'=>$item->product_id,
-             'quantity'=>$item->quantity,
-             'price'=>$item->total_price,
+                'order_id' => $order->id,
+                'product_id' => $item->product_id,
+                'quantity' => $item->quantity,
+                'price' => $item->total_price,
 
             ]);
-          }
+        }
 
         $user->cart()->delete();
 
@@ -75,6 +75,7 @@ class PaymentController extends Controller
         if ($admin) {
             $admin->notify(new NewOrder($order));
         }
+
         return view('payment.success');
     }
 

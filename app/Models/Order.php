@@ -9,12 +9,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Order extends Model
 {
     use HasFactory,SoftDeletes;
+
     protected $fillable = [
         'order_number',
         'user_id',
         'subtotal',
         'status',
- 
+
     ];
 
     // Relationship with the User model
@@ -22,6 +23,7 @@ class Order extends Model
     {
         return $this->belongsTo(User::class);
     }
+
     public function items()
     {
         return $this->hasMany(OrderItem::class);

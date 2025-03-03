@@ -12,72 +12,64 @@ class UserController extends Controller
     {
         $this->middleware('auth')->only(['addToCart']);
     }
-    
+
     public function user()
     {
-        $totalcount=0;
-        if(auth()->check())
-        {
-            $totalcount=Cart::where('user_id',auth()->id())->count();
+        $totalcount = 0;
+        if (auth()->check()) {
+            $totalcount = Cart::where('user_id', auth()->id())->count();
         }
-     
-        $products=Product::all();
-     return view('usersite',compact('products','totalcount'));
-    }
 
+        $products = Product::all();
+
+        return view('usersite', compact('products', 'totalcount'));
+    }
 
     public function addToCart(Request $request)
-    
     {
-    // dd($request->all());
-      $product=Product::find($request->product_id);
-      $total=$product->price*$request->quantity;
-        $user=auth()->user()->id;
-        $exsistingproduct=Cart::where('product_id',$request->product_id)
-                                ->where('user_id',auth()->user()->id)->first();
-        if($exsistingproduct)
-        {
-            $exsistingproduct->quantity=$request->quantity;
-            $exsistingproduct->total_price=$total;
+        // dd($request->all());
+        $product = Product::find($request->product_id);
+        $total = $product->price * $request->quantity;
+        $user = auth()->user()->id;
+        $exsistingproduct = Cart::where('product_id', $request->product_id)
+            ->where('user_id', auth()->user()->id)->first();
+        if ($exsistingproduct) {
+            $exsistingproduct->quantity = $request->quantity;
+            $exsistingproduct->total_price = $total;
             $exsistingproduct->update();
-        }
-        else
-        {
-     
+        } else {
+
             Cart::create([
-             'user_id'=> $user,
-             'product_id'=>$request->product_id,
-             'quantity'=>$request->quantity,
-             'total_price'=>$total,
+                'user_id' => $user,
+                'product_id' => $request->product_id,
+                'quantity' => $request->quantity,
+                'total_price' => $total,
             ]);
         }
-        
-        
 
-    return redirect()->back()->with('success', 'Product added to cart!');
+        return redirect()->back()->with('success', 'Product added to cart!');
     }
-    
- 
 
     /**
      * Store a newly created resource in storage.
      */
     public function showcart()
     {
-        $totalcount=0;
-        if(auth()->check())
-        {
-            $totalcount=Cart::where('user_id',auth()->id())->count();
+        $totalcount = 0;
+        if (auth()->check()) {
+            $totalcount = Cart::where('user_id', auth()->id())->count();
         }
-      $carts=Cart::where('user_id',auth()->user()->id)->get();
-        return view('show_cart',compact('carts','totalcount'));
+        $carts = Cart::where('user_id', auth()->user()->id)->get();
+
+        return view('show_cart', compact('carts', 'totalcount'));
     }
 
     public function deleteCart($id)
     {
-        $carts=Cart::findOrFail($id);
-       $carts->delete();
-       return back();
+        $carts = Cart::findOrFail($id);
+        $carts->delete();
+
+        return back();
     }
 
     /**
@@ -99,8 +91,5 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        
-    }
+    public function destroy(string $id) {}
 }

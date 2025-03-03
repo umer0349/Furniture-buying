@@ -39,9 +39,15 @@
                             class="btn btn-warning btn-sm fa fa-trash"
                             data-bs-toggle="tooltip"
                             data-bs-placement="top"
-                            title="soft delete"></a>
+                            title="soft delete">
+                        </a>
+                        <a href="{{route('order.heard_deleted',$item->id)}}"
+                            class="btn btn-danger btn-sm fa fa-trash"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="heard delete"></a>
                         @endif
-                        @if(!$item->deleted_at==null)
+                        @if($item->deleted_at)
                         <a href="{{route('order.restore',$item->id)}}"
                             class="btn btn-primary btn-sm fa fa-undo"
                             data-bs-toggle="tooltip"

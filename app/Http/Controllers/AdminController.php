@@ -16,7 +16,9 @@ class AdminController extends Controller
     {
         $countuser = User::count();
         $countorder = Order::count();
-        return view('Admin_dashboard', compact('countuser', 'countorder'));
+        $totalrevenue = Order::sum('subtotal');
+
+        return view('Admin_dashboard', compact('countuser', 'countorder', 'totalrevenue'));
     }
 
     /**
@@ -24,7 +26,6 @@ class AdminController extends Controller
      */
     public function create()
     {
-
 
         $products = Product::paginate(3);
 
@@ -36,14 +37,14 @@ class AdminController extends Controller
      */
     public function store(Request $request)
     {
-        $validateddata =  $request->validate([
-            'title' => 'required|string|max:255',
-            'price' => 'required|numeric',
+        $validateddata = $request->validate([
+            'title' => 'required|string|max:255|min:4',
+            'price' => 'required|numeric|min:2',
 
         ]);
         if ($request->hasFile('image')) {
             $image = ($request->file('image'));
-            $imgname = rand(100, 1000) . time() . '.' . $image->getClientOriginalExtension();
+            $imgname = rand(100, 1000).time().'.'.$image->getClientOriginalExtension();
             $image->move(public_path('gallery/product'), $imgname);
         }
         Product::create([
@@ -56,45 +57,52 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Product added successfully!');
     }
 
-
     /**
      * Display the specified resource.
      */
     public function showorders()
     {
         $orders = Order::withTrashed()->paginate(3);
+
         return view('admin.orders.show', compact('orders'));
     }
+
     public function restoreorders($id)
     {
         $orders = Order::withTrashed()->find($id);
         $orders->restore();
+
         return back();
     }
+
     public function headdelete($id)
     {
         $orders = Order::find($id);
         $orders->forceDelete();
+
         return back();
     }
+
     public function editproduct($id)
     {
 
         $edit = Product::find($id);
+
         return view('admin.products.edit', compact('edit'));
     }
+
     public function updateproduct(Request $request, $id)
     {
         $product = Product::find($id);
 
-        $validateddata =  $request->validate([
+        $validateddata = $request->validate([
             'title' => 'required|string|max:255',
             'price' => 'required|numeric',
             'image' => 'nullable|mimes:jpg,png',
         ]);
         if ($request->hasFile('image')) {
             $image = ($request->file('image'));
-            $imgname = rand(100, 1000) . time() . '.' . $image->getClientOriginalExtension();
+            $imgname = rand(100, 1000).time().'.'.$image->getClientOriginalExtension();
             $image->move(public_path('gallery/product'), $imgname);
             $product->image = $imgname;
         }
@@ -104,12 +112,15 @@ class AdminController extends Controller
 
         return redirect()->route('product.create')->with('success', 'Product updated successfully!');
     }
+
     public function deleteproduct($id)
     {
         $productdelete = Product::find($id);
         $productdelete->delete();
+
         return redirect()->back()->with('success', 'Product deleted successfully!');
     }
+
     /**
      * Show the form for editing the specified resource.
      */
@@ -117,7 +128,7 @@ class AdminController extends Controller
     {
         $orderdetail = Order::with('items.product')->find($id);
 
-        if (!$orderdetail) {
+        if (! $orderdetail) {
             return back()->with('error', 'Order not found.');
         }
 
@@ -131,17 +142,22 @@ class AdminController extends Controller
     {
         $order = Order::find($id);
         $order->delete();
+
         return back();
     }
+
     public function showusers()
     {
         $allusers = User::paginate(3);
+
         return view('admin.users.show', compact('allusers'));
     }
+
     public function deleteusers($id)
     {
         $allusers = User::find($id);
         $allusers->delete();
+
         return to_route('user.show');
     }
 }

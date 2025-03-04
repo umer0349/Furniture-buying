@@ -24,13 +24,12 @@ class AdminController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-
-        $products = Product::paginate(3);
-
+        $products = Product::paginate(10);
         return view('admin.products.create', compact('products'));
     }
+    
 
     /**
      * Store a newly created resource in storage.
@@ -42,6 +41,7 @@ class AdminController extends Controller
             'price' => 'required|numeric|min:2',
 
         ]);
+        $imgname = "";
         if ($request->hasFile('image')) {
             $image = ($request->file('image'));
             $imgname = rand(100, 1000).time().'.'.$image->getClientOriginalExtension();
@@ -53,8 +53,12 @@ class AdminController extends Controller
             'price' => $validateddata['price'],
             'image' => $imgname,
         ]);
-
-        return redirect()->back()->with('success', 'Product added successfully!');
+        return response()->json([
+            'success' => true,
+            'message' => 'Product created successfully!',
+        ], 200);
+        
+        // return redirect()->back()->with('success', 'Product added successfully!');
     }
 
     /**
@@ -62,7 +66,7 @@ class AdminController extends Controller
      */
     public function showorders()
     {
-        $orders = Order::withTrashed()->paginate(3);
+        $orders = Order::withTrashed()->paginate(10);
 
         return view('admin.orders.show', compact('orders'));
     }

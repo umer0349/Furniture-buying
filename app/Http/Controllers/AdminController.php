@@ -26,50 +26,83 @@ class AdminController extends Controller
      */
     public function create(Request $request)
     {
-        $products = Product::paginate(10);
+        $products = Product::all();
+
         return view('admin.products.create', compact('products'));
     }
-    
+
+    public function listProducts()
+    {
+        $products = Product::all(); // Fetch all products
+
+        return response()->json([
+            'success' => true,
+            'products' => $products,
+        ]);
+    }
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        $validateddata = $request->validate([
-            'title' => 'required|string|max:255|min:4',
-            'price' => 'required|numeric|min:2',
-
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
-        $imgname = "";
-        if ($request->hasFile('image')) {
-            $image = ($request->file('image'));
-            $imgname = rand(100, 1000).time().'.'.$image->getClientOriginalExtension();
-            $image->move(public_path('gallery/product'), $imgname);
-        }
-        Product::create([
 
-            'title' => $validateddata['title'],
-            'price' => $validateddata['price'],
-            'image' => $imgname,
+        $imageName = time().'.'.$request->image->extension();
+        $request->image->move(public_path('gallery/product'), $imageName);
+
+        $product = Product::create([
+            'title' => $request->title,
+            'price' => $request->price,
+            'image' => $imageName,
         ]);
+
         return response()->json([
             'success' => true,
-            'message' => 'Product created successfully!',
-        ], 200);
-        
-        // return redirect()->back()->with('success', 'Product added successfully!');
+            'message' => 'Product created successfully.',
+            'product' => $product,
+        ]);
     }
 
     /**
      * Display the specified resource.
      */
-    public function showorders()
+    public function showorders(Request $request)
     {
-        $orders = Order::withTrashed()->paginate(10);
+        if ($request->ajax()) {
+            $orders = Order::with('user')->withTrashed(); // Soft deleted orders bhi show karne ke liye
 
-        return view('admin.orders.show', compact('orders'));
+            return datatables()->of($orders)
+                ->addIndexColumn() // Automatic indexing ke liye
+                ->addColumn('user_name', function ($row) {
+                    return $row->user->name ?? 'N/A';
+                })
+                ->addColumn('created_at', function ($row) {
+                    return $row->created_at->format('d M, Y');
+                })
+                ->addColumn('action', function ($row) {
+                    $btn = '<a href="' . route('orderdtail.show', $row->id) . '" class="btn btn-info btn-sm fa fa-eye" title="View"></a>';
+
+                    if ($row->deleted_at == null) {
+                        $btn .= ' <a href="' . route('order.delete', $row->id) . '" class="btn btn-warning btn-sm fa fa-trash" title="Soft Delete"></a>';
+                        $btn .= ' <a href="' . route('order.heard_deleted', $row->id) . '" class="btn btn-danger btn-sm fa fa-trash" title="Hard Delete"></a>';
+                    } else {
+                        $btn .= ' <a href="' . route('order.restore', $row->id) . '" class="btn btn-primary btn-sm fa fa-undo" title="Restore"></a>';
+                    }
+
+                    return $btn;
+                })
+                ->rawColumns(['action']) // HTML buttons enable karne ke liye
+                ->make(true);
+        }
+
+        return view('admin.orders.show'); // Blade file return karega
     }
+
 
     public function restoreorders($id)
     {
@@ -78,14 +111,19 @@ class AdminController extends Controller
 
         return back();
     }
+public function headdelete($id)
+{
+    $orders = Order::findOrFail($id);
 
-    public function headdelete($id)
-    {
-        $orders = Order::find($id);
-        $orders->forceDelete();
-
-        return back();
+    if (!$orders) {
+        return back()->with('error', 'Order not found!');
     }
+
+    $orders->forceDelete();
+
+    return back()->with('success', 'Order deleted successfully!');
+}
+
 
     public function editproduct($id)
     {
@@ -104,25 +142,40 @@ class AdminController extends Controller
             'price' => 'required|numeric',
             'image' => 'nullable|mimes:jpg,png',
         ]);
+
         if ($request->hasFile('image')) {
-            $image = ($request->file('image'));
+            $image = $request->file('image');
             $imgname = rand(100, 1000).time().'.'.$image->getClientOriginalExtension();
             $image->move(public_path('gallery/product'), $imgname);
             $product->image = $imgname;
         }
+
         $product->title = $request->title;
         $product->price = $request->price;
         $product->save();
 
-        return redirect()->route('product.create')->with('success', 'Product updated successfully!');
+        return response()->json([
+            'success' => true,
+            'message' => 'Product updated successfully!',
+        ]);
     }
 
     public function deleteproduct($id)
     {
         $productdelete = Product::find($id);
-        $productdelete->delete();
+        if ($productdelete) {
+            $productdelete->delete();
 
-        return redirect()->back()->with('success', 'Product deleted successfully!');
+            return response()->json([
+                'success' => true,
+                'message' => 'Product deleted successfully!',
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found!',
+            ], 404);
+        }
     }
 
     /**

@@ -1,45 +1,73 @@
 @extends('layouts.index')
-@section('title','edit product')
+@section('title', 'Edit Product')
 @section('content')
-
-      
-          <form action="{{route('product.update',$edit->id)}}" method="post" enctype="multipart/form-data">
-            @csrf
-              <div class="row">
-                <div class="col-8 offset-1">
-                  <div class="form-group">
-                    <label class="text-black" for="fname">Title:</label>
-                    <input type="text" class="form-control" id="fname" name="title" value="{{$edit->title}}">
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-8 offset-1">
-                  <div class="form-group">
-                    <label class="text-black" for="fname">price:</label>
-                    <input type="number" class="form-control" id="fname" name="price" min="0" value="{{$edit->price}}" >
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-8 offset-1">
-                  <div class="form-group">
-                    <label class="text-black" for="image">Image:</label>
-                    <input type="file" class="form-control" id="image" name="image" >
-              
-                    <!-- Agar edit mode mein pehle se image ho toh yahan dikhana -->
-                    @if(isset($edit->image))
-                      <div class="mt-2">
-                        <img src="/gallery/product/{{ $edit->image}}"  alt="Current Image" width="150">
-                      </div>
-                    @endif
-                  </div>
-                </div>
-              </div>
-              
-        <button class="btn btn-success btn-sm" type="submit">update</button>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-12">
+      <h2>Edit Product</h2>
+      <form id="editProductForm" action="{{ route('product.update', $edit->id) }}" method="POST" enctype="multipart/form-data">
+        @csrf
+        <div class="mb-3">
+          <label for="title" class="form-label">Title:</label>
+          <input type="text" class="form-control" id="title" name="title" value="{{ $edit->title }}" required>
+        </div>
+        <div class="mb-3">
+          <label for="price" class="form-label">Price:</label>
+          <input type="number" class="form-control" id="price" name="price" value="{{ $edit->price }}" required>
+        </div>
+        <div class="mb-3">
+          <label for="image" class="form-label">Image:</label>
+          <input type="file" class="form-control" id="image" name="image" onchange="previewImage(event)">
+          <!-- Image Preview -->
+          <div class="mt-2">
+            <img id="preview" src="{{ $edit->image ? '/gallery/product/' . $edit->image : '' }}"
+              alt="Product Image" width="100"
+              style="{{ $edit->image ? '' : 'display: none;' }}">
+          </div>
+          <button type="submit" class="btn btn-primary">Update</button>
       </form>
-    
+    </div>
+  </div>
+</div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function() {
+    // Handle form submission via AJAX
+    $('#editProductForm').submit(function(e) {
+      e.preventDefault(); // Prevent default form submission
 
+      let formData = new FormData(this); // Create FormData object
+
+      $.ajax({
+        url: $(this).attr('action'), // Form action URL
+        type: 'POST',
+        data: formData,
+        contentType: false, // Don't set content type
+        processData: false, // Don't process data
+        success: function(response) {
+          if (response.success) {
+            // Redirect to the product.create route
+            window.location.href = "{{ route('product.create') }}";
+          }
+        },
+        error: function(xhr) {
+          alert('An error occurred while updating the product.');
+        }
+      });
+    });
+
+  });
+</script>
+<script>
+  function previewImage(event) {
+    let reader = new FileReader();
+    reader.onload = function() {
+      let preview = document.getElementById('preview');
+      preview.src = reader.result;
+      preview.style.display = 'block'; // Ensure the image is visible
+    };
+    reader.readAsDataURL(event.target.files[0]);
+  }
+</script>
 @endsection

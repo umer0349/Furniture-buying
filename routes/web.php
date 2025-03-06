@@ -23,6 +23,7 @@ Route::middleware(['role:admin'])->group(function () {
     Route::controller(AdminController::class)->group(function () {
         Route::get('/admin', 'admin')->name('adminside');
         Route::get('/product/create', 'create')->name('product.create');
+        Route::get('/product/list', 'listProducts')->name('product.list');
         Route::post('/product/create', 'store')->name('product.store');
         Route::get('/product/edit/{id}', 'editproduct')->name('product.edit');
         Route::post('/product/update/{id}', 'updateproduct')->name('product.update');

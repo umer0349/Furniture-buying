@@ -1,19 +1,6 @@
 @extends('layouts.index')
 @section('title','Create Product')
 @section('content')
-
-@if(Session::has('success'))
-<div class="alert alert-success">{{ Session::get('success') }}</div>
-@endif
-@if ($errors->any())
-<div class="alert alert-danger">
-  <ul>
-    @foreach ($errors->all() as $error)
-    <li>{{ $error }}</li>
-    @endforeach
-  </ul>
-</div>
-@endif
 <div class="row mt-5">
   <div class="col-lg-6">
     <i class="fw-bolder fs-4">Users List</i>
@@ -24,8 +11,8 @@
     </button>
   </div>
 </div>
-<div id="message"></div>
-<div class="container">
+<div id="message"  class="text-white mt-3 position-fixed fw-bolder" style=" background-color:black"></div>
+<div class="container mt-5">
   <div class="table-responsive">
     <table class="table table-hover table-bordered text-center">
       <thead class="table-info">
@@ -34,26 +21,12 @@
           <th>Title</th>
           <th>Price</th>
           <th>Image</th>
-          <th>Created At</th>
+          <th>Created_at</th>
           <th>Action</th>
         </tr>
       </thead>
-      <tbody>
-        @foreach ($products as $item)
-        <tr>
-          <td>{{ $loop->iteration }}</td>
-          <td>{{ $item->title }}</td>
-          <td>{{ $item->price }}</td>
-          <td>
-            <img src="/gallery/product/{{ $item->image }}" alt="Product Image" width="50">
-          </td>
-          <td>{{ $item->created_at->format('d, M, y') }}</td>
-          <td>
-            <a class="btn btn-primary btn-sm" href="{{ route('product.edit', $item->id) }}">Edit</a>
-            <a class="btn btn-danger btn-sm" href="{{ route('product.delete', $item->id) }}">Delete</a>
-          </td>
-        </tr>
-        @endforeach
+      <tbody id="productTableBody">
+        <!-- Products will be loaded here dynamically -->
       </tbody>
     </table>
   </div>
@@ -76,11 +49,16 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Price:</label>
-            <input type="number" class="form-control" name="price" min="0">
+            <input type="number" class="form-control" name="price" min="0" >
           </div>
           <div class="mb-3">
             <label class="form-label">Image:</label>
-            <input type="file" class="form-control" name="image">
+            <input type="file" class="form-control" name="image" onchange="previewImage(event)">
+          </div>
+          <div class="mt-2">
+            <img id="preview" 
+              alt="Product Image" width="100"
+              style="{{'display: none;' }}">
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
@@ -92,14 +70,51 @@
   </div>
 </div>
 
-<div class="d-flex justify-content-center mt-4">
-  {{ $products->links('pagination::bootstrap-4') }}
-</div>
 @endsection
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
   $(document).ready(function() {
+    // Function to load products from the server
+    function loadProducts() {
+      $.ajax({
+        url: "{{ route('product.list') }}", // Route to fetch products
+        type: "GET",
+        success: function(response) {
+          if (response.success) {
+            let products = response.products;
+            let tableBody = $("#productTableBody");
+            tableBody.empty(); // Clear existing rows
+
+            // Append each product to the table
+            products.forEach(function(product, index) {
+              let newRow = `
+                <tr id="productRow_${product.id}">
+                  <td>${index + 1}</td>
+                  <td>${product.title}</td>
+                  <td>${product.price}</td>
+                  <td><img src="/gallery/product/${product.image}" alt="Product Image" width="50"></td>
+                  <td>${new Date(product.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                  <td>
+                    <a class="btn btn-primary btn-sm" href="/product/edit/${product.id}">Edit</a>
+                    <a class="btn btn-danger btn-sm delete-product" data-id="${product.id}" href="#">Delete</a>
+                  </td>
+                </tr>
+              `;
+              tableBody.append(newRow);
+            });
+          }
+        },
+        error: function(xhr) {
+          alert('An error occurred while loading products.');
+        }
+      });
+    }
+
+    // Load products when the page is loaded
+    loadProducts();
+
+    // AJAX for creating a product
     $("#productform").submit(function(e) {
       e.preventDefault();
       let formdata = new FormData(this);
@@ -112,12 +127,47 @@
         success: function(response) {
           if (response.success) {
             $("#exampleModal").modal("hide");
-                     $("#message").html(`<div class="alert alert-success">${response.message}</div>`).fadeIn().delay(3000).fadeOut();
-           
-             
+            $("#message").html(response.message).fadeIn().delay(3000).fadeOut();
+            $("#productform").trigger("reset");
+            $("#preview").attr("src","").hide();
+
+            // Reload products after creating a new one
+            loadProducts();
           }
         },
       });
     });
+
+    // AJAX for deleting a product
+    $(document).on('click', '.delete-product', function(e) {
+      e.preventDefault();
+      let productId = $(this).data('id');
+      if (confirm('Are you sure you want to delete this product?')) {
+        $.ajax({
+          url: `/product/delete/${productId}`,
+          type: 'GET',
+          success: function(response) {
+            if (response.success) {
+              $("#message").html(response.message).fadeIn().delay(3000).fadeOut();
+              $(`#productRow_${productId}`).remove(); // Remove the row from the table
+            }
+          },
+          error: function(xhr) {
+            alert('An error occurred while deleting the product.');
+          }
+        });
+      }
+    });
   });
+</script>
+  <script>
+  function previewImage(event) {
+    let reader = new FileReader();
+    reader.onload = function() {
+      let preview = document.getElementById('preview');
+      preview.src = reader.result;
+      preview.style.display = 'block'; // Ensure the image is visible
+    };
+    reader.readAsDataURL(event.target.files[0]);
+  }
 </script>

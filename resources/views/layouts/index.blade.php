@@ -16,7 +16,7 @@
     <!-- Additional CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
     <style>
         body {
             display: flex;
@@ -109,7 +109,7 @@
                         <!-- User Dropdown -->
                         <div class="dropdown ms-auto">
                             <button class="text-white fw-bold dropdown-toggle" style="background-color: black" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <img src="https://via.placeholder.com/30" alt="" class="rounded-circle">
+                             
                                 <span id="username">{{Auth::user()?->name}}</span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
@@ -153,3 +153,5 @@
     });
 </script>
 <!-- Bootstrap JS and jQuery -->
+
+<script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>

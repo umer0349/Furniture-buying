@@ -85,13 +85,13 @@ class AdminController extends Controller
                     return $row->created_at->format('d M, Y');
                 })
                 ->addColumn('action', function ($row) {
-                    $btn = '<a href="' . route('orderdtail.show', $row->id) . '" class="btn btn-info btn-sm fa fa-eye" title="View"></a>';
+                    $btn = '<a href="'.route('orderdtail.show', $row->id).'" class="btn btn-info btn-sm fa fa-eye" title="View"></a>';
 
                     if ($row->deleted_at == null) {
-                        $btn .= ' <a href="' . route('order.delete', $row->id) . '" class="btn btn-warning btn-sm fa fa-trash" title="Soft Delete"></a>';
-                        $btn .= ' <a href="' . route('order.heard_deleted', $row->id) . '" class="btn btn-danger btn-sm fa fa-trash" title="Hard Delete"></a>';
+                        $btn .= ' <a href="'.route('order.delete', $row->id).'" class="btn btn-warning btn-sm fa fa-trash" title="Soft Delete"></a>';
+                        $btn .= ' <a href="'.route('order.heard_deleted', $row->id).'" class="btn btn-danger btn-sm fa fa-trash" title="Hard Delete"></a>';
                     } else {
-                        $btn .= ' <a href="' . route('order.restore', $row->id) . '" class="btn btn-primary btn-sm fa fa-undo" title="Restore"></a>';
+                        $btn .= ' <a href="'.route('order.restore', $row->id).'" class="btn btn-primary btn-sm fa fa-undo" title="Restore"></a>';
                     }
 
                     return $btn;
@@ -103,7 +103,6 @@ class AdminController extends Controller
         return view('admin.orders.show'); // Blade file return karega
     }
 
-
     public function restoreorders($id)
     {
         $orders = Order::withTrashed()->find($id);
@@ -111,19 +110,19 @@ class AdminController extends Controller
 
         return back();
     }
-public function headdelete($id)
-{
-    $orders = Order::findOrFail($id);
 
-    if (!$orders) {
-        return back()->with('error', 'Order not found!');
+    public function headdelete($id)
+    {
+        $orders = Order::findOrFail($id);
+
+        if (! $orders) {
+            return back()->with('error', 'Order not found!');
+        }
+
+        $orders->forceDelete();
+
+        return back()->with('success', 'Order deleted successfully!');
     }
-
-    $orders->forceDelete();
-
-    return back()->with('success', 'Order deleted successfully!');
-}
-
 
     public function editproduct($id)
     {

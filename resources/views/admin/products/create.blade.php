@@ -11,7 +11,6 @@
     </button>
   </div>
 </div>
-<div id="message"  class="text-white mt-3 position-fixed fw-bolder" style=" background-color:black"></div>
 <div class="container mt-5">
   <div class="table-responsive">
     <table class="table table-hover table-bordered text-center">
@@ -49,14 +48,14 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Price:</label>
-            <input type="number" class="form-control" name="price" min="0" >
+            <input type="number" class="form-control" name="price" min="0">
           </div>
           <div class="mb-3">
             <label class="form-label">Image:</label>
             <input type="file" class="form-control" name="image" onchange="previewImage(event)">
           </div>
           <div class="mt-2">
-            <img id="preview" 
+            <img id="preview"
               alt="Product Image" width="100"
               style="{{'display: none;' }}">
           </div>
@@ -127,40 +126,65 @@
         success: function(response) {
           if (response.success) {
             $("#exampleModal").modal("hide");
-            $("#message").html(response.message).fadeIn().delay(3000).fadeOut();
             $("#productform").trigger("reset");
-            $("#preview").attr("src","").hide();
-
+            $("#preview").attr("src", "").hide();
+            $("body").append(response.toast);
             // Reload products after creating a new one
             loadProducts();
+
           }
         },
+        error: function(xhr) {
+          if (xhr.responseJSON && xhr.responseJSON.toast) {
+            $("body").append(xhr.responseJSON.toast);
+          } else {
+            $("body").append('<div class="alert alert-danger">Something went wrong</div>');
+          }
+        }
       });
     });
 
     // AJAX for deleting a product
     $(document).on('click', '.delete-product', function(e) {
-      e.preventDefault();
-      let productId = $(this).data('id');
-      if (confirm('Are you sure you want to delete this product?')) {
-        $.ajax({
-          url: `/product/delete/${productId}`,
-          type: 'GET',
-          success: function(response) {
-            if (response.success) {
-              $("#message").html(response.message).fadeIn().delay(3000).fadeOut();
-              $(`#productRow_${productId}`).remove(); // Remove the row from the table
-            }
-          },
-          error: function(xhr) {
-            alert('An error occurred while deleting the product.');
-          }
-        });
-      }
+    e.preventDefault();
+    let productId = $(this).data('id');
+
+    // Show SweetAlert confirmation before deleting
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `/product/delete/${productId}`,  // ✅ Fixed URL syntax
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        // Remove the product row
+                        $(`#productRow_${productId}`).remove();  // ✅ Fixed selector syntax
+
+                        // Show PHP-based Toast Notification if exists
+                        if (response.toast) {
+                            $("body").append(response.toast);
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire("Error!", "An error occurred while deleting the product.", "error");
+                }
+            });
+        }
     });
+});
+
   });
 </script>
-  <script>
+<script>
   function previewImage(event) {
     let reader = new FileReader();
     reader.onload = function() {

@@ -47,8 +47,10 @@
         processData: false, // Don't process data
         success: function(response) {
           if (response.success) {
-            // Redirect to the product.create route
-            window.location.href = "{{ route('product.create') }}";
+            $("body").append(response.toast);
+            setTimeout(function() {
+                    window.location.href = "{{ route('product.create') }}";
+                }, 2000); 
           }
         },
         error: function(xhr) {

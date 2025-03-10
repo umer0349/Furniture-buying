@@ -46,26 +46,33 @@ class AdminController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
+        try {
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'price' => 'required|numeric|min:0',
+                'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            ]);
 
-        $imageName = time().'.'.$request->image->extension();
-        $request->image->move(public_path('gallery/product'), $imageName);
+            $imageName = time().'.'.$request->image->extension();
+            $request->image->move(public_path('gallery/product'), $imageName);
 
-        $product = Product::create([
-            'title' => $request->title,
-            'price' => $request->price,
-            'image' => $imageName,
-        ]);
+            $product = Product::create([
+                'title' => $request->title,
+                'price' => $request->price,
+                'image' => $imageName,
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Product created successfully.',
-            'product' => $product,
-        ]);
+            return response()->json([
+                'success' => true,
+                'toast' => show_toast('success', 'Product created successfully!'),
+                'product' => $product,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'toast' => show_toast('error', 'Something went wrong: '.$e->getMessage()),
+            ], 500);
+        }
     }
 
     /**
@@ -84,14 +91,18 @@ class AdminController extends Controller
                 ->addColumn('created_at', function ($row) {
                     return $row->created_at->format('d M, Y');
                 })
+                ->addColumn('subtotal', function ($row) {
+                    return '$'.number_format($row->subtotal, 2); // $ sign + 2 decimal places
+                })
                 ->addColumn('action', function ($row) {
-                    $btn = '<a href="' . route('orderdtail.show', $row->id) . '" class="btn btn-info btn-sm fa fa-eye" title="View"></a>';
+                    $btn = '<div class="btn-group" role="group">';
 
                     if ($row->deleted_at == null) {
-                        $btn .= ' <a href="' . route('order.delete', $row->id) . '" class="btn btn-warning btn-sm fa fa-trash" title="Soft Delete"></a>';
-                        $btn .= ' <a href="' . route('order.heard_deleted', $row->id) . '" class="btn btn-danger btn-sm fa fa-trash" title="Hard Delete"></a>';
+                        $btn .= ' <a href="'.route('order.delete', $row->id).'" class="btn btn-warning btn-sm fa fa-trash me-2" title="Soft Delete"></a>';
+                        $btn .= ' <a href="'.route('order.heard_deleted', $row->id).'" class="btn btn-danger btn-sm fa fa-trash me-2" title="Hard Delete"></a>';
+                        $btn .= '<a href="'.route('orderdtail.show', $row->id).'" class="btn btn-info btn-sm fa fa-eye" title="View"></a>';
                     } else {
-                        $btn .= ' <a href="' . route('order.restore', $row->id) . '" class="btn btn-primary btn-sm fa fa-undo" title="Restore"></a>';
+                        $btn .= ' <a href="'.route('order.restore', $row->id).'" class="btn btn-primary btn-sm fa fa-undo" title="Restore"></a>';
                     }
 
                     return $btn;
@@ -103,7 +114,6 @@ class AdminController extends Controller
         return view('admin.orders.show'); // Blade file return karega
     }
 
-
     public function restoreorders($id)
     {
         $orders = Order::withTrashed()->find($id);
@@ -111,19 +121,19 @@ class AdminController extends Controller
 
         return back();
     }
-public function headdelete($id)
-{
-    $orders = Order::findOrFail($id);
 
-    if (!$orders) {
-        return back()->with('error', 'Order not found!');
+    public function headdelete($id)
+    {
+        $orders = Order::findOrFail($id);
+
+        if (! $orders) {
+            return back()->with('error', 'Order not found!');
+        }
+
+        $orders->forceDelete();
+
+        return back()->with('success', 'Order deleted successfully!');
     }
-
-    $orders->forceDelete();
-
-    return back()->with('success', 'Order deleted successfully!');
-}
-
 
     public function editproduct($id)
     {
@@ -156,7 +166,7 @@ public function headdelete($id)
 
         return response()->json([
             'success' => true,
-            'message' => 'Product updated successfully!',
+            'toast' => show_toast('success', 'Product updated successfully!'),
         ]);
     }
 
@@ -168,7 +178,7 @@ public function headdelete($id)
 
             return response()->json([
                 'success' => true,
-                'message' => 'Product deleted successfully!',
+                'toast' => show_toast('success', '<i class="fa fa-trash"></i> Product deleted successfully!'),
             ]);
         } else {
             return response()->json([
